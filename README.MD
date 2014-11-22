@@ -1,1 +1,1 @@
-Hackerearth Syscloude solution
+Repository that contains solutions for Hackerearth problems
