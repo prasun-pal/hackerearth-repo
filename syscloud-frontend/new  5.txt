@@ -1,0 +1,101 @@
+var API_KEY = 'b4e45bf3110dfad9827c397384915bd4b4950725';
+makers = {};
+
+var loadVariants = function(make, model ){
+	var pageIndex = 1;
+	var loadMoreVariants = function(results){
+		var $variants = $('#variants');
+		$.each(results.data, function(i, rec){
+			//$variants.append('<option>' + rec.variant + '</option>');
+			makers[make].models[model].variants[rec.variant] = rec.variant;
+		});
+		if(results.count - pageIndex * 10 > 0 ){
+			pageIndex = pageIndex + 1;
+			try{
+				loadVariant(pageIndex);
+			}catch(e){
+				console.log(e);
+			}
+		}
+	};
+	var loadVariant = function(pageIndex){
+		$.ajax({
+		  type: 'GET',
+		  async : 'false',
+		  url: 'http://www.hackerearth.com/dataweave/v1/carPricesIndia/listUniqVariants/',
+		  data: { api_key: API_KEY, make: "'" + make + "'", model: "'" + model + "'", page: pageIndex, per_page: '10' },
+		  jsonpCallback: 'jsonp',
+		  dataType: 'jsonp',
+		  success: loadMoreVariants,
+		  error: function(e){
+			console.log(e);
+		  }
+		});
+	};
+	loadVariant(pageIndex);
+};
+var loadModel = function( makeName ){
+	var pageIndex = 1;
+	var loadMore = function(results){
+		var $models = $('#models');
+		$.each(results.data, function(i, rec){
+			//console.log(rec);
+			//$models.append('<option>' + rec.model + '</option>');
+			makers[makeName].models[rec.model] = { model: rec.model, variants:{}};
+			loadVariants(makeName, rec.model);
+			console.log(makeName);
+			console.log(makers[makeName].models);
+			//console.log('Models: '); console.log(makers[makeName].models[rec.model]);
+		});
+		if(results.count - pageIndex * 10 > 0 ){
+			pageIndex = pageIndex + 1;
+			try{
+				load(pageIndex);
+			}catch(e){
+				console.log(e);
+			}
+		}
+	};
+	var load = function(pageIndex){
+		$.ajax({
+		  type: 'GET',
+		  async : 'false',
+		  url: 'http://www.hackerearth.com/dataweave/v1/carPricesIndia/listUniqModels/',
+		  data: { api_key: API_KEY, make: makeName, page: pageIndex, per_page: '10' },
+		  jsonpCallback: 'jsonp',
+		  dataType: 'jsonp',
+		  success: loadMore,
+		  error: function(e){
+			console.log(e);
+		  } 
+		});
+	};
+	try{
+		load(pageIndex);
+	}catch(e){
+		console.log(e);
+	}
+};
+
+var loadMakers = function(){
+	$.ajax({
+	  type: 'GET',
+	  async : 'false',
+	  url: 'http://www.hackerearth.com/dataweave/v1/carPricesIndia/listUniqMakes/',
+	  data: { api_key: API_KEY, page: '1', per_page: '20' },
+	  jsonpCallback: 'jsonp',
+	  dataType: 'jsonp',
+	  success: function(results){
+		var $makeSelect = $('#make');
+		$.each(results.data, function(i, rec){
+			makers[rec.make] = { make: rec.make, models : {}};
+			//$makeSelect.append('<option id="' + rec.make + '">' + rec.make + '</option>');
+			loadModel(rec.make);
+		});
+		console.log(makers);
+	   },
+		  error: function(e){
+			console.log(e);
+		  }
+	});
+};

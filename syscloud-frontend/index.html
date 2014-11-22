@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+	<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCuRUzrMW5LfH_woergNnow_O1NdsxBxmY&amp;libraries=places">
+    </script>
+	<script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.11.1.min.js"></script>
+	<script type="text/javascript"
+      src="magic.js">
+    </script>
+	
+    <script type="text/javascript">
+		$( document ).ready(function() {
+			var cities = ['Agartala','Agra','Ahmedabad','Ahmednagar','Akola','Aligarh','Allahabad','AmbalaCantt','Amravati','Amritsar','Anand','Anantapur','Aurangabad','Bangalore','Bareily','Bathinda','Beed','Belgaum','Bhagalpur','Bharuch','Bhilai','Bhilwara','Bhiwani','Bhopal','BHUBANESHWAR','Bijapur','Bikaner','Bilaspur','Bokaro','Chandigarh','Chennai','Cochin/Ernakulam','Coimbatore','Cuttack','Dehradun','Delhi','Dhanbad','Dhule','Duliajan','Durgapur','Faridabad/Gurgaon','Gangtok','Gaya','Gorakhpur','Guntur','Guwahati','Gwalior','Haldwani-cum-Kathgodom','Himatnagar','Hisar','Hoshiarpur','Hospet','Hubli','Hyderabad/Secunderabad','Indore','Jabalpur','Jaipur','Jalandhar','Jalgaon','Jammu','Jamnagar','Jamshedpur','Jhansi','Jodhpur','Jorhat','Jullunder','Kalyan','Kangra','Kannur','Kanpur','Karimnagar','Karnal','Koch Behar','Kohlapur','Kolkata','Kota','Kozhencherry','Lucknow','Ludhiana','Madurai','Malda','Mandi','Mangalore','Margao','Meerut','Mehboobnagar','Mohali','Mumbai','Muzaffarpur','Mysore','Nagpur','Naharlagaon','Nanded-Waghala','Nellore','Nizamabad','Noida','Ongole','Palakkad','Palanpur','Panchkula','Panipat','Patiala','Patna','Pelanthamma','Perinthalmanna','Pondicherry','Pune','Raipur','Rajahmundri','Rajkot','Ranchi','Ratnagiri','Rewari','Rohtak','Roorkee','Rourkela','Saharanpur','Salem','Sambalpur','Sangli','Satara','Shimoga','Sikar','Siliguri','Solan','Sonepat','Srinagar','Sultanpur','Surat','Thane','Thanjavur','Thrissur','Trichy','Trivandrum','Udaipur','Udupi','Vadodara','Vapi','Varanasi','Vijayawada','Visakhapatnam','Warangal','Yamunanagar'];
+			var $make = $('#make');
+			var $models = $('#models');
+			var $variants = $('#variants');
+			
+			var input = $(document.getElementById('City1'));
+			var input2 = $(document.getElementById('City2'));
+			var input3 = $(document.getElementById('City3'));
+			var input4 = $(document.getElementById('City4'));
+			
+			$.each(cities, function(i, v){
+				input.append('<option>' + v + '</option>');
+				input2.append('<option>' + v + '</option>');
+				input3.append('<option>' + v + '</option>');
+				input4.append('<option>' + v + '</option>');
+			});
+			var changeState = function(state){
+				$make.attr('disabled', state);
+				$models.attr('disabled', state);
+				$variants.attr('disabled', state);
+			};
+			changeState(true);
+			loadMakers(function(){
+				loadModel($make.val(), function(){
+					loadVariants($make.val(), $models.val(), function(){
+						changeState(false);
+					});
+				});
+			});
+			$make.off('change').on('change', function(evt){
+				$models.empty();
+				$variants.empty();
+				$('#makeSpin').css('display','block');
+				changeState(true);
+				loadModel($(this).val(), function(){
+					loadVariants($make.val(), $models.val(), function(){
+						changeState(false);
+					$('#makeSpin').css('display','none');
+					});
+				});
+				
+			});
+			$models.off('change').on('change', function(evt){
+				$variants.empty();
+				changeState(true);
+				$('#modelSpin').css('display','block');
+				loadVariants($make.val(), $(this).val(), function(){
+					changeState(false);
+					$('#modelSpin').css('display','none');
+				});
+			});
+			var $go = $('#go');
+			$go.off('click').on('click', function(evt){
+				var options = {city1: $('#City1').val(),
+							   city2: $('#City2').val(),
+							   city3: $('#City3').val(),
+							   city4: $('#City4').val(),
+							   make: $make.val(),
+							   model: $models.val(),
+							   variant: $variants.val()};
+				$go.attr('disabled', true);
+				displayInMap(options, function(){
+					$go.attr('disabled', false);
+				});
+			});
+		});
+      function initialize() {
+        var mapOptions = {
+          center: { lat: 21.052138, lng: 65.251608},
+          zoom: 5,
+		  scrollwheel: false
+        };
+        map = new google.maps.Map(document.getElementById('map-canvas'),
+            mapOptions);
+		var options = {
+		  types: ['(cities)'],
+		  componentRestrictions: {country: "in"}
+		 };
+		/*
+		var autocomplete = new google.maps.places.Autocomplete(input, options);
+		var autocomplete = new google.maps.places.Autocomplete(input2, options);
+		var autocomplete = new google.maps.places.Autocomplete(input3, options);
+		var autocomplete = new google.maps.places.Autocomplete(input4, options);*/
+      }
+      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body>
+<div id="map-canvas"></div>
+<div id="container" class="shadow">
+	<div class= "formItem"> <span class="label">Make</span> <select id="make"> </select> <i id="makeSpin" style="float:right; display:none;" class="fa fa-spinner fa-spin"></i> </div>
+	<div class= "formItem"> <span class="label">Model</span> <select id="models"> </select> <i id="modelSpin" style="float:right; display:none;" class="fa fa-spinner fa-spin"></i>  </div>
+	<div class= "formItem"> <span class="label">Variant</span> <select id="variants"> </select> <i id="variantSpin" style="float:right; display:none;" class="fa fa-spinner fa-spin"></i>  </div>
+	<div class= "formItem"> <span class="label">Cities</span> </div>
+	<div class= "formItem"> <span class="label">City 1</span> <select style="float:right;" type="text" id="City1"></select></div>
+	<div class= "formItem"> <span class="label">City 2</span> <select style="float:right;" type="text" id="City2"></select></div>
+	<div class= "formItem"> <span class="label">City 3</span> <select style="float:right;" type="text" id="City3"></select></div>
+	<div class= "formItem"> <span class="label">City 4</span> <select style="float:right;" type="text" id="City4"></select></div> 
+	<div class= "formItem"> <div id="go" class="btn" style="float:right;"> GO </div> </div>
+</div>
+  </body>
+</html>
